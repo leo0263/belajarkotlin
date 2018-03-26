@@ -16,6 +16,9 @@ interface XkcdApiService {
     @GET("{number}/info.0.json ")
     fun getComicByNumber(@Path("number") number: String): Observable<XkcdData>
 
+    @GET("info.0.json ")
+    fun getLatestComic() : Observable<XkcdData>
+
     companion object {
         fun create() : XkcdApiService {
             val retrofit = Retrofit.Builder()

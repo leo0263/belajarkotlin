@@ -10,9 +10,14 @@ import org.junit.Test
 class XkcdPrimitiveApiServiceTest {
 
     @Test
-    fun test_retrofit_connection_to_xkcd_server() {
+    fun test_xkcd_api_get_latest() {
         val xkcdApiService: XkcdApiService = XkcdApiService.create()
+        xkcdApiService.getLatestComic().subscribe { print(it) }
+    }
 
+    @Test
+    fun test_xkcd_api_get_by_number() {
+        val xkcdApiService: XkcdApiService = XkcdApiService.create()
         xkcdApiService.getComicByNumber("1").subscribe { print(it) }
     }
 
