@@ -41,30 +41,6 @@ class MainActivity : AppCompatActivity() {
         getLatestComic()
     }
 
-    private fun pressPrevButton() {
-        var prevIndex = currentIndex - 1
-        xkcdApiService.getComicByNumber(prevIndex.toString())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                        {   xkcdData = it
-                            updateUI() },
-                        { Log.e("MainActivity", it.toString()) }
-                )
-    }
-
-    private fun pressNextButton() {
-        var prevIndex = currentIndex + 1
-        xkcdApiService.getComicByNumber(prevIndex.toString())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                        {   xkcdData = it
-                            updateUI() },
-                        { Log.e("MainActivity", it.toString()) }
-                )
-    }
-
     private fun initRetrofit() {
         xkcdApiService = XkcdApiService.create()
     }
@@ -82,6 +58,27 @@ class MainActivity : AppCompatActivity() {
                 )
     }
 
+    private fun getComicByIndex(index : String) {
+        xkcdApiService.getComicByNumber(index)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        {   xkcdData = it
+                            updateUI() },
+                        { Log.e("MainActivity", it.toString()) }
+                )
+    }
+
+    private fun pressPrevButton() {
+        val prevIndex = currentIndex - 1
+        getComicByIndex(prevIndex.toString())
+    }
+
+    private fun pressNextButton() {
+        val prevIndex = currentIndex + 1
+        getComicByIndex(prevIndex.toString())
+    }
+
     private fun updateUI() {
         comicTitle.text = xkcdData.safe_title
         Picasso.with(this)
@@ -91,7 +88,6 @@ class MainActivity : AppCompatActivity() {
         currentIndex = xkcdData.num
         nextButton.isEnabled = currentIndex < latestIndex
         prevButton.isEnabled = currentIndex >= 1
-
     }
 
 }
