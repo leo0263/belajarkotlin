@@ -2,28 +2,28 @@ package com.example.q1.belajarkotlinkedua
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import com.example.q1.belajarkotlinkedua.data.XkcdApiService
-import com.example.q1.belajarkotlinkedua.data.XkcdData
+import com.example.q1.belajarkotlinkedua.domain.GetComicById
+import com.example.q1.belajarkotlinkedua.domain.GetLatestComic
 import com.squareup.picasso.Picasso
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.internal.operators.flowable.FlowableReplay.observeOn
 import io.reactivex.schedulers.Schedulers
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var xkcdApiService : XkcdApiService
-    private lateinit var xkcdData : XkcdData
-    private var latestIndex: Int = 0
     private var currentIndex: Int = 0
 
     private lateinit var comicTitle : TextView
     private lateinit var comicImage : ImageView
     private lateinit var nextButton : Button
     private lateinit var prevButton : Button
+
+    private lateinit var getLatestComic : GetLatestComic
+    private lateinit var getComicById : GetComicById
+    private lateinit var mainViewModel: MainViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,36 +37,27 @@ class MainActivity : AppCompatActivity() {
         nextButton.setOnClickListener { pressNextButton() }
         prevButton.setOnClickListener { pressPrevButton() }
 
-        initRetrofit()
+        val xkcdApiService : XkcdApiService = XkcdApiService.create()
+        getLatestComic = GetLatestComic(xkcdApiService)
+        getComicById = GetComicById(xkcdApiService)
+
+        mainViewModel = MainViewModel(getLatestComic, getComicById)
+        mainViewModel
+                .getNotifyObservable()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io()).subscribe {
+                    updateUIFromViewModel()
+                }
+
         getLatestComic()
     }
 
-    private fun initRetrofit() {
-        xkcdApiService = XkcdApiService.create()
-    }
-
-
     private fun getLatestComic() {
-        xkcdApiService.getLatestComic()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                        {   xkcdData = it
-                            latestIndex = xkcdData.num
-                            updateUI() },
-                        { Log.e("MainActivity", it.toString()) }
-                )
+        mainViewModel.getLatestComic()
     }
 
     private fun getComicByIndex(index : String) {
-        xkcdApiService.getComicByNumber(index)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(
-                        {   xkcdData = it
-                            updateUI() },
-                        { Log.e("MainActivity", it.toString()) }
-                )
+        mainViewModel.getComicById(index)
     }
 
     private fun pressPrevButton() {
@@ -79,14 +70,14 @@ class MainActivity : AppCompatActivity() {
         getComicByIndex(prevIndex.toString())
     }
 
-    private fun updateUI() {
-        comicTitle.text = xkcdData.safe_title
+    private fun updateUIFromViewModel() {
+        comicTitle.text = mainViewModel.xkcdData?.safe_title
         Picasso.with(this)
-                .load(xkcdData.img).fit().centerInside()
+                .load(mainViewModel.xkcdData?.img).fit().centerInside()
                 .into(comicImage)
 
-        currentIndex = xkcdData.num
-        nextButton.isEnabled = currentIndex < latestIndex
+        currentIndex = mainViewModel.xkcdData?.num ?: 0
+        nextButton.isEnabled = currentIndex < mainViewModel.latestIndex
         prevButton.isEnabled = currentIndex >= 1
     }
 

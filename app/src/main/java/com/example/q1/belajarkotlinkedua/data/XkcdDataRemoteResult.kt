@@ -17,7 +17,7 @@ package com.example.q1.belajarkotlinkedua.data
 //title	"Personal Data"
 //day	"23"
 
-data class XkcdData(
+data class XkcdDataRemoteResult(
         val month : Int,
         val num : Int,
         val link : String,

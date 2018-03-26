@@ -14,10 +14,10 @@ import retrofit2.http.Path
 interface XkcdApiService {
 
     @GET("{number}/info.0.json ")
-    fun getComicByNumber(@Path("number") number: String): Observable<XkcdData>
+    fun getComicByNumber(@Path("number") number: String): Observable<XkcdDataRemoteResult>
 
     @GET("info.0.json ")
-    fun getLatestComic() : Observable<XkcdData>
+    fun getLatestComic() : Observable<XkcdDataRemoteResult>
 
     companion object {
         fun create() : XkcdApiService {
