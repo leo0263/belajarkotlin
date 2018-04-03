@@ -8,13 +8,12 @@ import android.widget.TextView
 import com.example.q1.belajarkotlinkedua.data.XkcdApiService
 import com.example.q1.belajarkotlinkedua.domain.GetComicById
 import com.example.q1.belajarkotlinkedua.domain.GetLatestComic
+import com.example.q1.belajarkotlinkedua.presentation.MainViewState
 import com.squareup.picasso.Picasso
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 
 class MainActivity : AppCompatActivity() {
-
-    private var currentIndex: Int = 0
 
     private lateinit var comicTitle : TextView
     private lateinit var comicImage : ImageView
@@ -46,39 +45,28 @@ class MainActivity : AppCompatActivity() {
                 .getNotifyObservable()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io()).subscribe {
-                    updateUIFromViewModel()
+                    updateUIFromViewModel(it)
                 }
 
-        getLatestComic()
-    }
-
-    private fun getLatestComic() {
-        mainViewModel.getLatestComic()
-    }
-
-    private fun getComicByIndex(index : String) {
-        mainViewModel.getComicById(index)
+        mainViewModel.refreshComic()
     }
 
     private fun pressPrevButton() {
-        val prevIndex = currentIndex - 1
-        getComicByIndex(prevIndex.toString())
+        mainViewModel.gotoPreviousComic()
     }
 
     private fun pressNextButton() {
-        val prevIndex = currentIndex + 1
-        getComicByIndex(prevIndex.toString())
+        mainViewModel.gotoNextComic()
     }
 
-    private fun updateUIFromViewModel() {
-        comicTitle.text = mainViewModel.xkcdData?.safe_title
+    private fun updateUIFromViewModel(mainViewState: MainViewState) {
+        comicTitle.text = mainViewState.data.safe_title
         Picasso.with(this)
-                .load(mainViewModel.xkcdData?.img).fit().centerInside()
+                .load(mainViewState.data.img).fit().centerInside()
                 .into(comicImage)
 
-        currentIndex = mainViewModel.xkcdData?.num ?: 0
-        nextButton.isEnabled = currentIndex < mainViewModel.latestIndex
-        prevButton.isEnabled = currentIndex >= 1
+        nextButton.isEnabled = mainViewState.isNextButtonEnabled
+        prevButton.isEnabled = mainViewState.isPrevButtonEnabled
     }
 
 }
