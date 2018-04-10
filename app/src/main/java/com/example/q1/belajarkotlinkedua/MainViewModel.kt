@@ -16,8 +16,8 @@ import java.util.concurrent.TimeUnit
 
 class MainViewModel(private val getLatestComic: GetLatestComic, private val getComicById: GetComicById) {
 
-    private var currentIndex: Int = 0
-    private var latestIndex: Int = 0
+    var currentIndex: Int = 0
+    var latestIndex: Int = 0
     private val notifySubject : PublishSubject<MainViewState> = PublishSubject.create()
 
     fun getNotifyObservable() : Observable<MainViewState> = notifySubject
@@ -27,13 +27,25 @@ class MainViewModel(private val getLatestComic: GetLatestComic, private val getC
     }
 
     fun gotoPreviousComic() {
-        currentIndex--
-        getComicById(currentIndex)
+        if (canGoPrev(currentIndex)) {
+            currentIndex--
+            getComicById(currentIndex)
+        }
     }
 
     fun gotoNextComic() {
-        currentIndex++
-        getComicById(currentIndex)
+        if (canGoNext(currentIndex)) {
+            currentIndex++
+            getComicById(currentIndex)
+        }
+    }
+
+    private fun canGoNext(index: Int) : Boolean {
+        return index < latestIndex
+    }
+
+    private fun canGoPrev(index: Int) : Boolean {
+        return index > 1
     }
 
     private fun getLatestComic() {
@@ -41,7 +53,7 @@ class MainViewModel(private val getLatestComic: GetLatestComic, private val getC
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe {
-                    val mainViewState = MainViewState(it, false, true)
+                    val mainViewState = MainViewState(it, canGoNext(currentIndex), canGoPrev(currentIndex))
                     currentIndex = mainViewState.data.num
                     latestIndex = mainViewState.data.num
                     notifySubject.onNext(mainViewState)
@@ -49,18 +61,11 @@ class MainViewModel(private val getLatestComic: GetLatestComic, private val getC
     }
 
     private fun getComicById(number: Int) {
-        var canGoNext = true
-        if (number == latestIndex) canGoNext = false
-
-        var canGoPrev = true
-        if (number <= 1) canGoPrev = false
-
-
         getComicById.execute(number.toString())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe {
-                    val mainViewState = MainViewState(it, canGoNext, canGoPrev)
+                    val mainViewState = MainViewState(it, canGoNext(currentIndex), canGoPrev(currentIndex))
                     notifySubject.onNext(mainViewState)
                 }
     }
