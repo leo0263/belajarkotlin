@@ -51,6 +51,15 @@ class MainViewModelTest {
 
         mainViewModel.gotoPreviousComic()
         Assert.assertEquals(mainViewModel.currentIndex, 665)
+
+        mainViewModel.gotoPreviousComic()
+        Assert.assertEquals(mainViewModel.currentIndex, 664)
+
+        mainViewModel.gotoNextComic()
+        Assert.assertEquals(mainViewModel.currentIndex, 665)
+
+        mainViewModel.refreshComic()
+        Assert.assertEquals(mainViewModel.currentIndex, 666)
     }
 
 }
