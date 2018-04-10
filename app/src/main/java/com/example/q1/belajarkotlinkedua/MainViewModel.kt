@@ -27,11 +27,13 @@ class MainViewModel(private val getLatestComic: GetLatestComic, private val getC
     }
 
     fun gotoPreviousComic() {
-        getComicById(currentIndex - 1)
+        currentIndex--
+        getComicById(currentIndex)
     }
 
     fun gotoNextComic() {
-        getComicById(currentIndex + 1)
+        currentIndex++
+        getComicById(currentIndex)
     }
 
     private fun getLatestComic() {
@@ -59,7 +61,6 @@ class MainViewModel(private val getLatestComic: GetLatestComic, private val getC
                 .subscribeOn(Schedulers.io())
                 .subscribe {
                     val mainViewState = MainViewState(it, canGoNext, canGoPrev)
-                    currentIndex = mainViewState.data.num
                     notifySubject.onNext(mainViewState)
                 }
     }
