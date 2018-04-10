@@ -2,19 +2,18 @@ package com.example.q1.belajarkotlinkedua
 
 import com.example.q1.belajarkotlinkedua.domain.GetComicById
 import com.example.q1.belajarkotlinkedua.domain.GetLatestComic
-import com.example.q1.belajarkotlinkedua.domain.XkcdDataResult
 import com.example.q1.belajarkotlinkedua.presentation.MainViewState
 import io.reactivex.Observable
+import io.reactivex.Scheduler
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.PublishSubject
-import java.util.concurrent.TimeUnit
 
 /**
  * Created by q1 on 26/03/18.
  */
 
-class MainViewModel(private val getLatestComic: GetLatestComic, private val getComicById: GetComicById) {
+class MainViewModel(private val getLatestComic: GetLatestComic, private val getComicById: GetComicById, private var subscriberSchedulers: Scheduler = Schedulers.io(), private var observerSchedulers: Scheduler = AndroidSchedulers.mainThread()) {
 
     var currentIndex: Int = 0
     var latestIndex: Int = 0
@@ -50,8 +49,8 @@ class MainViewModel(private val getLatestComic: GetLatestComic, private val getC
 
     private fun getLatestComic() {
         getLatestComic.execute()
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
+                .observeOn(observerSchedulers)
+                .subscribeOn(subscriberSchedulers)
                 .subscribe {
                     val mainViewState = MainViewState(it, canGoNext(currentIndex), canGoPrev(currentIndex))
                     currentIndex = mainViewState.data.num
@@ -62,8 +61,8 @@ class MainViewModel(private val getLatestComic: GetLatestComic, private val getC
 
     private fun getComicById(number: Int) {
         getComicById.execute(number.toString())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
+                .observeOn(observerSchedulers)
+                .subscribeOn(subscriberSchedulers)
                 .subscribe {
                     val mainViewState = MainViewState(it, canGoNext(currentIndex), canGoPrev(currentIndex))
                     notifySubject.onNext(mainViewState)
