@@ -3,6 +3,7 @@ package com.example.q1.belajarkotlinkedua
 import com.example.q1.belajarkotlinkedua.domain.GetComicById
 import com.example.q1.belajarkotlinkedua.domain.GetLatestComic
 import com.example.q1.belajarkotlinkedua.domain.XkcdDataResult
+import com.example.q1.belajarkotlinkedua.presentation.MainViewState
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
 import io.reactivex.Observable
@@ -16,9 +17,11 @@ import org.junit.Before
 
 class MainViewModelTest {
 
-    val getComicById = mock<GetComicById>()
-    val getLatestComic = mock<GetLatestComic>()
-    val dummyXkcdDataResult = XkcdDataResult(
+    private val getComicById = mock<GetComicById>()
+    private val getLatestComic = mock<GetLatestComic>()
+    private lateinit var mainViewModel: MainViewModel
+
+    private val dummyXkcdDataResult = XkcdDataResult(
             1,
             666,
             "dummy link",
@@ -34,14 +37,15 @@ class MainViewModelTest {
 
     // workaround to mock Retrofit service call
     //      https://stackoverflow.com/a/40018295
+    @Before
+    fun initialTestSetup() {
+        whenever(getLatestComic.execute()).thenReturn(Observable.just(dummyXkcdDataResult))
+        whenever(getComicById.execute(anyString())).thenReturn(Observable.just(dummyXkcdDataResult))
+        mainViewModel = MainViewModel(getLatestComic, getComicById, Schedulers.trampoline(), Schedulers.trampoline())
+    }
 
     @Test
     fun try_mocking_domains() {
-
-        whenever(getLatestComic.execute()).thenReturn(Observable.just(dummyXkcdDataResult))
-        whenever(getComicById.execute(anyString())).thenReturn(Observable.just(dummyXkcdDataResult))
-
-        var mainViewModel = MainViewModel(getLatestComic, getComicById, Schedulers.trampoline(), Schedulers.trampoline())
 
         mainViewModel.refreshComic()
         Assert.assertEquals(mainViewModel.currentIndex, 666)
@@ -60,6 +64,24 @@ class MainViewModelTest {
 
         mainViewModel.refreshComic()
         Assert.assertEquals(mainViewModel.currentIndex, 666)
+    }
+
+    @Test
+    fun refreshComic_shouldEmit_MainViewState() {
+
+        var mainViewState: MainViewState
+
+        val testSubscriber = mainViewModel.getNotifyObservable()
+                .observeOn(Schedulers.trampoline())
+                .subscribeOn(Schedulers.trampoline())
+                .test()
+
+        mainViewModel.refreshComic()
+
+        mainViewState = MainViewState(dummyXkcdDataResult, false, true)
+
+        testSubscriber.assertValue(mainViewState)
+        testSubscriber.assertNotComplete()
     }
 
 }

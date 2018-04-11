@@ -13,10 +13,15 @@ import io.reactivex.subjects.PublishSubject
  * Created by q1 on 26/03/18.
  */
 
-class MainViewModel(private val getLatestComic: GetLatestComic, private val getComicById: GetComicById, private var subscriberSchedulers: Scheduler = Schedulers.io(), private var observerSchedulers: Scheduler = AndroidSchedulers.mainThread()) {
+class MainViewModel(
+        private val getLatestComic: GetLatestComic,
+        private val getComicById: GetComicById,
+        private var subscriberSchedulers: Scheduler = Schedulers.io(),
+        private var observerSchedulers: Scheduler = AndroidSchedulers.mainThread()) {
 
     var currentIndex: Int = 0
     var latestIndex: Int = 0
+
     private val notifySubject : PublishSubject<MainViewState> = PublishSubject.create()
 
     fun getNotifyObservable() : Observable<MainViewState> = notifySubject
@@ -52,7 +57,7 @@ class MainViewModel(private val getLatestComic: GetLatestComic, private val getC
                 .observeOn(observerSchedulers)
                 .subscribeOn(subscriberSchedulers)
                 .subscribe {
-                    val mainViewState = MainViewState(it, canGoNext(currentIndex), canGoPrev(currentIndex))
+                    val mainViewState = MainViewState(it, false, true)
                     currentIndex = mainViewState.data.num
                     latestIndex = mainViewState.data.num
                     notifySubject.onNext(mainViewState)
